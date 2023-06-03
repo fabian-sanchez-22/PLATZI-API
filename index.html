@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Platzi</title>
+    <link rel="stylesheet" href="CSS/bootstrap.css">
+    <link rel="stylesheet" href="Js/bootstrap.js">
+</head>
+
+<body onload="traerProductos(), mostrarCarro()">
+    <div class="container-fluid mt-4 ">
+
+        <div class="row">
+            <div class="col-4">
+                <h1>Platzi</h1>
+            </div>
+
+            <div class="col-6">
+                <button onclick="traer()" class="btn btn-primary" style="margin-left: 40px; position: absolute; top: 20px; right: 550px; ">Buscar</button>
+                <div style="margin-right: 30px; width: 400px; " class="input-group mb-3">
+                    <input onkeyup="autocompletar()" id="txtBuscar" type="text" class="form-control"
+                        aria-label="Text input with dropdown button">
+                    <div style="position: absolute; top: 40px; z-index: 99; background-color: white; width: 290px; border-radius: 10px; "
+                        id="autoc"></div>
+                    <button onclick="traerCategorias()" class="btn btn-outline-secondary dropdown-toggle" type="button"
+                        data-bs-toggle="dropdown" aria-expanded="false">Categorias</button>
+                    <ul style="z-index: 100;" id="cardCategoria" class="dropdown-menu dropdown-menu-end">
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-2">
+                <button onclick="mostrarCarro()" class="btn btn-primary" style="margin-left: 40px;"
+                    data-bs-toggle="offcanvas" data-bs-target="#staticBackdrop"
+                    aria-controls="staticBackdrop">Carrito</button>
+
+
+
+                <div class="offcanvas offcanvas-start" data-bs-backdrop="static" tabindex="-1" id="staticBackdrop"
+                    aria-labelledby="staticBackdropLabel">
+                    <div class="offcanvas-header">
+                        <h5 class="offcanvas-title" id="staticBackdropLabel">Offcanvas</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                    </div>
+                    <div class="offcanvas-body">
+
+                        <form>
+                            <label for="currency-select">Seleccionar Mondeda:</label>
+                            <select id="seleccionada" onchange="convertirMoneda()">
+                                <option value="COP">COP</option>
+                                <option value="EUR">EUR</option>
+                                <option value="JPY">JPY</option>
+                                <option value="GBP">GBP</option>
+                                <option value="AUD">AUD</option>
+                                <option value="CAD">CAD</option>
+                            </select>
+                        </form>
+
+
+                        <ul id="carro">
+
+                        </ul>
+
+                        <div>
+                            <h2 id="total"></h2>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="row justify-content-center  " style="display: flex; justify-content: center; margin-top: 30px; "
+            id="productos"></div>
+    </div>
+
+</body>
+
+</html>
+
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
+    integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3"
+    crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.min.js"
+    integrity="sha384-cuYeSxntonz0PPNlHhBs68uyIAVpIIOZZ5JqeqvYYIcEL727kskC66kF92t6Xl2V"
+    crossorigin="anonymous"></script>
+
+<script>
+    let productos = ""
+    function traerProductos() {
+        fetch("https://api.escuelajs.co/api/v1/products")
+            .then(response => response.json())
+            .then(data => {
+
+                data.forEach(element => {
+                    let id = element.id
+                    let nombreProducto = element.title
+                    let descripcion = element.description
+                    let precio = element.price
+
+                    productos += `
+<div class="card mb-3 mx-3 " style="width: 18rem;  ">
+  <img src="${element.images[0]}" class="card-img-top" alt="...">
+  <div class="card-body">
+    <p class="card-text">${nombreProducto}</p>
+    <p class="card-text">${descripcion}</p>
+    <p class="card-text">$${precio}</p>
+    <a  class="btn btn-primary"  onclick="añadir('${id}')" >Agregar al carrito</a>
+  </div>
+</div>
+                    `
+                    document.getElementById("productos").innerHTML = productos
+                });
+            })
+    }
+
+    function autocompletar() {
+        let nombreP = document.getElementById("txtBuscar").value;
+        document.getElementById("txtBuscar").innerHTML = nombreP;
+
+        if (nombreP.length < 3) {
+            document.getElementById("autoc").innerHTML = "";
+            return;
+        }
+
+        fetch("https://api.escuelajs.co/api/v1/products")
+            .then(response => response.json())
+            .then(data => {
+                let auto = "";
+                data.forEach(element => {
+                    if (element.title.toLowerCase().includes(nombreP.toLowerCase())) {
+                        auto += `<div>${element.title}</div>`;
+                    }
+                });
+                document.getElementById("autoc").innerHTML = auto;
+            });
+    }
+
+
+
+    function traerCategorias() {
+        let categoria = ""
+        fetch("https://api.escuelajs.co/api/v1/categories")
+            .then(response => response.json())
+            .then(data => {
+
+                data.forEach(element => {
+                    let nombre = element.name
+                    let id = element.id
+                    categoria += `
+					
+                    <li><a onclick="localCategorias('${id}')" href="productos.html" class="dropdown-item" >${nombre}</a></li>
+			`
+
+                    document.getElementById("cardCategoria").innerHTML = categoria
+                });
+            })
+    }
+
+    function traer() {
+        let nombreP = document.getElementById("txtBuscar").value;
+        document.getElementById("txtBuscar").innerHTML = nombreP;
+        let buscar = ""
+
+        fetch(`https://api.escuelajs.co/api/v1/products/?title=${nombreP}`)
+            .then(response => response.json())
+            .then(data => {
+
+                data.forEach(element => {
+                    let nombreProducto = element.title
+                    let descripcion = element.description
+                    let precio = element.price
+                    let id = element.id
+
+                    buscar += `
+<div class="card" style="width: 18rem;  ">
+  <img src="${element.images[0]}" class="card-img-top" alt="...">
+  <div class="card-body">
+    <p class="card-text">${nombreProducto}</p>
+    <p class="card-text">${descripcion}</p>
+    <p class="card-text">$${precio}</p>
+    <a  class="btn btn-primary" onclick="añadir('${id}')" >Agregar al carrito</a>
+  </div>
+</div>
+                    `
+                    document.getElementById("productos").innerHTML = buscar
+                    document.getElementById("autoc").innerHTML = ""
+                });
+            })
+
+    }
+
+    function localCategorias(urlCategorias) {
+        localStorage.setItem("urlPlatzi", urlCategorias)
+
+    }
+
+
+    let carro = [localStorage.carrito]
+    carro = JSON.parse(carro)
+
+    function añadir(id) {
+        carro.push(id)
+        localStorage.setItem("carrito", JSON.stringify(carro))
+    }
+
+    function mostrarCarro() {
+
+        let car = ""
+        let total = 0
+        carro.forEach(element => {
+            if (element == undefined || null) {
+
+                document.getElementById("carro").innerHTML = ""
+
+            } else {
+                fetch(`https://api.escuelajs.co/api/v1/products/${element}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data)
+                        let imagen = data.images
+                        let nombreProducto = data.title
+                        let precio = data.price
+                        let id = data.id
+                        total += precio
+
+                        car += `
+                <div class="card" style="width: 13rem;">
+  <img src="${imagen}" class="card-img-top" alt="...">
+  <div class="card-body">
+    <h5 class="card-title">${nombreProducto}</h5>
+    <p class="card-text" id="precio${id}" >${precio}</p>
+    <a onclick="eliminar('${id}')" class="btn btn-primary">Eliminar</a>
+  </div>
+</div>
+                `
+                        document.getElementById("carro").innerHTML = car
+                        document.getElementById("total").innerHTML = "Total $" + total
+                        localStorage.setItem("carrito", JSON.stringify(carro))
+                    })
+
+            }
+        })
+    }
+
+    function eliminar(id) {
+        if (carro.includes(id)) {
+            let posicion = carro.indexOf(`${id}`);
+            carro.splice(posicion, 1);
+            localStorage.setItem("carrito", JSON.stringify(carro))
+            mostrarCarro();
+        }
+    }
+
+    function convertirMoneda() {
+
+        convert = 0
+        carro.forEach((element) => {
+            fetch(`https://api.escuelajs.co/api/v1/products/${element}`)
+                .then((resp) => resp.json())
+                .then((data) => {
+                    let precio = data.price
+                    let id = data.id
+
+
+                    var eleccion = document.getElementById("seleccionada");
+                    var value = eleccion.options[eleccion.selectedIndex].value;
+                    console.log(value)
+
+
+                    var myHeaders = new Headers();
+                    myHeaders.append("apikey", "W8CPtmFrV3eRO4e9DIRtKZmOtrt8Wmed");
+
+                    var requestOptions = {
+                        method: 'GET',
+                        redirect: 'follow',
+                        headers: myHeaders
+                    };
+
+                    fetch(`https://api.apilayer.com/fixer/convert?to=${value}&from=USD&amount=${precio}`, requestOptions)
+                        .then(response => response.json())
+                        .then(result => {
+                            
+                        
+                            document.getElementById(`precio${id}`).innerText = result.result
+                            convert += result.result
+                            document.getElementById("total").innerHTML = "$" + convert
+                        })
+                })
+        })
+
+
+
+    }
+</script>

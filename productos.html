@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="CSS/bootstrap.css">
+    <link rel="stylesheet" href="Js/bootstrap.js">
+</head>
+<body onload="traerLocal()" > 
+    <div class="container-fluid" >
+       <div>
+        <h1 id="titulo" ></h1>
+       </div>
+
+        <div class="row justify-content-center  " style="display: flex; justify-content: center; margin-top: 30px; "
+            id="productos"></div>
+    </div>
+</body>
+</html>
+
+<script>
+    
+    function traerLocal (){
+        let productos = ""
+        return new Promise (response => {
+            let local = localStorage.urlPlatzi
+            let link = "https://api.escuelajs.co/api/v1/products/?categoryId="
+            let urlFinal = (`${link}${local}`)
+
+            fetch(urlFinal)
+            .then ( response => response.json())
+            .then ( data => {
+                data.forEach(element => {
+                    let nombreProducto = element.title
+                    let descripcion = element.description
+                    let precio = element.price
+
+                    productos += `
+<div class="card mb-3 mx-3 " style="width: 18rem;  ">
+  <img src="${element.images[0]}" class="card-img-top" alt="...">
+  <div class="card-body">
+    <p class="card-text">${nombreProducto}</p>
+    <p class="card-text">${descripcion}</p>
+    <p class="card-text">${precio}</p>
+  </div>
+</div>
+                    `
+                    document.getElementById("productos").innerHTML = productos
+                });
+            })
+        })
+    }
+</script>
